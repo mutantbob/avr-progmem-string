@@ -10,7 +10,7 @@ struct Arguments {
     static_k: Static,
     varname: Ident,
     eq: Token![=],
-    string_literal: Vec<u8>,
+    string_bytes: Vec<u8>,
     semicolon: Token![;],
 }
 
@@ -21,7 +21,7 @@ impl Parse for Arguments {
         parsing::keyword(input, "string")?;
         let varname = input.parse()?;
         let eq: Token![=] = input.parse()?;
-        let string_literal: Vec<u8> = if input.lookahead1().peek(LitStr) {
+        let string_bytes: Vec<u8> = if input.lookahead1().peek(LitStr) {
             let literal = input.parse::<LitStr>()?;
             literal.value().as_bytes().to_vec()
         } else {
@@ -34,7 +34,7 @@ impl Parse for Arguments {
             static_k,
             varname,
             eq,
-            string_literal,
+            string_bytes,
             semicolon,
         })
     }
@@ -81,15 +81,15 @@ pub fn avr_progmem_str(t_stream: TokenStream) -> TokenStream {
         static_k,
         varname,
         eq,
-        string_literal,
+        string_bytes,
         semicolon,
     } = macro_args;
 
-    let tokens = string_literal
+    let tokens = string_bytes
         .iter()
         .map(|b| quote!(#b , ))
         .collect::<Vec<_>>();
-    let count = string_literal.len();
+    let count = string_bytes.len();
 
     quote!(
         #[cfg_attr(target_arch = "avr", link_section = ".progmem.data")]

@@ -73,6 +73,13 @@ fn slurp<P: AsRef<std::path::Path>>(fname: P) -> Result<Vec<u8>, std::io::Error>
     Ok(rval)
 }
 
+/// Declare a static [avr_progmem::string::PmString] based on a \[u8] stored in progmem.
+/// ```
+/// avr_progmem_str! { static progmem string PANCAKES = "pancakes"; }
+/// avr_progmem_str! { static progmem string LC = include_str!("lovecraft.txt"); }
+/// ```
+/// This syntax is already supported by the [progmem!] macro, but that version depends on some compiler features that are still stabilizing.
+/// This macro is mostly an alternate implementation that is already half-irrelevant.
 #[proc_macro]
 pub fn avr_progmem_str(t_stream: TokenStream) -> TokenStream {
     let macro_args = syn::parse_macro_input!(t_stream as Arguments);
@@ -98,11 +105,21 @@ pub fn avr_progmem_str(t_stream: TokenStream) -> TokenStream {
     .into()
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        let result = 2 + 2;
-        assert_eq!(result, 4);
-    }
+/// Given a string, replace it with a literal byte array that is identical to a call to [std::string::as_bytes(&self)]
+/// ```
+/// assert_eq!("bacon".as_bytes(), string_as_bytes!("bacon"));
+/// ```
+#[proc_macro]
+pub fn string_as_bytes(t_stream: TokenStream) -> TokenStream {
+    let string_literal: LitStr = syn::parse_macro_input!(t_stream as LitStr);
+
+    let string_string = string_literal.value();
+    let string_bytes = string_string.as_bytes();
+    let tokens = string_bytes
+        .iter()
+        .map(|b| quote!(#b , ))
+        .collect::<Vec<_>>();
+    //let count = string_bytes.len();
+
+    quote!([ #(#tokens)* ]).into()
 }

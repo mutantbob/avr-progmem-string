@@ -9,7 +9,7 @@ edition = "2018"
 syn="*"
 quote="*"
 proc-macro2 = "*"
-avr-progmem = "*"
+#avr-progmem = "*"
 
 [lib]
 proc-macro=true
